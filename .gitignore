@@ -1,1 +1,17 @@
+# dependencies
 node_modules/
+Frontend/node_modules/
+Backend/node_modules/
+
+# builds
+Frontend/build/
+
+# env files
+.env
+.env.local
+Backend/.env
+Frontend/.env
+
+# misc
+.DS_Store
+npm-debug.log*
