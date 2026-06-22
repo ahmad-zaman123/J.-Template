@@ -12,6 +12,10 @@ Frontend/build/
 Backend/.env
 Frontend/.env
 
+# editor / IDE
+.idea/
+.vscode/
+
 # misc
 .DS_Store
 npm-debug.log*
