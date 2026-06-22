@@ -3,8 +3,20 @@ const Product = require("../models/Product");
 const CartItem = require("../models/CartItem");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/ApiError");
+const { fetchPaymentStatus } = require("../utils/safepay");
 
 const SHIPPING_FEE = 200;
+
+// Map Safepay tracker states to our order statuses.
+const SAFEPAY_STATE_MAP = {
+  TRACKER_ENDED: "paid",
+  TRACKER_OCCURRED: "paid",
+  OCCURRED: "paid",
+  PAID: "paid",
+  DECLINED: "failed",
+  CANCELLED: "cancelled",
+  EXPIRED: "failed",
+};
 
 const createOrder = asyncHandler(async (req, res) => {
   const { customer, shippingAddress, items, paymentMethod = "cod", sessionId } = req.body;
@@ -61,6 +73,19 @@ const getOrders = asyncHandler(async (req, res) => {
 const getOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw new ApiError(404, "Order not found");
+
+  // Webhook-free verification: if the payment is still pending, ask Safepay
+  // directly for the tracker state and update the order. The order-confirmation
+  // page polls this endpoint, so each poll re-checks until it resolves.
+  if (order.status === "pending_payment" && order.safepayTracker) {
+    const state = await fetchPaymentStatus(order.safepayTracker);
+    const next = SAFEPAY_STATE_MAP[state];
+    if (next && next !== order.status) {
+      order.status = next;
+      await order.save();
+    }
+  }
+
   res.json(order);
 });
 

@@ -74,6 +74,22 @@ const createTracker = async ({ orderId, amountPkr, customerEmail, redirectUrl })
   return { tracker: trackerToken, token: trackerToken, checkoutUrl: checkout };
 };
 
+/**
+ * Fetch the current state of a payment tracker directly from Safepay.
+ * Used to confirm payment on redirect without relying on a webhook.
+ * Returns the raw state string (e.g. "TRACKER_ENDED") or null on failure.
+ */
+const fetchPaymentStatus = async (tracker) => {
+  if (!tracker || !isConfigured()) return null;
+  try {
+    const res = await getSdk().reporter.payments.fetch(tracker);
+    return res?.data?.state || res?.state || null;
+  } catch (err) {
+    console.error("[safepay] fetchPaymentStatus failed:", err.message);
+    return null;
+  }
+};
+
 // The signing secret used to validate incoming webhooks. Prefer a dedicated
 // webhook secret from the Safepay dashboard; fall back to the API secret.
 const getWebhookSecret = () =>
@@ -100,6 +116,7 @@ const verifyWebhookSignature = (rawBody, signatureHeader) => {
 
 module.exports = {
   createTracker,
+  fetchPaymentStatus,
   verifyWebhookSignature,
   isWebhookEnforced,
   isConfigured,
