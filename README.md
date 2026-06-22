@@ -78,44 +78,6 @@ customer + shipping details and creates an order.
   (`POST /api/payments/safepay/webhook`, raw-body HMAC verified) flips the order to
   `paid`. The confirmation page polls while `status === "pending_payment"`.
 
-## API
-
-| Method | Route | Purpose |
-|--------|-------|---------|
-| GET | `/api/products` | list/filter (`category`, `featured`, `q`) |
-| GET | `/api/products/:id` | one product |
-| GET | `/api/cart` | cart for `x-session-id` |
-| POST | `/api/cart` | add `{ productId, quantity }` |
-| DELETE | `/api/cart/:id` | remove item |
-| POST | `/api/orders` | create order (COD or pending_payment) |
-| GET | `/api/orders/:id` | order by id |
-| GET | `/api/payments/config` | `{ safepay: bool }` |
-| POST | `/api/payments/safepay/checkout` | start Safepay, returns `checkoutUrl` |
-| POST | `/api/payments/safepay/webhook` | Safepay → order status |
-
-## Environment (Backend/.env)
-
-```
-PORT=5000
-NODE_ENV=development
-CLIENT_ORIGIN=http://localhost:3000
-PUBLIC_BASE_URL=http://localhost:3000
-MONGO_URI=<your Atlas connection string>/j-template
-SAFEPAY_API_KEY=        # the "API Key" (sec_... value) → merchant_api_key
-SAFEPAY_SECRET=         # the long hex secret → SDK auth
-SAFEPAY_ENV=sandbox
-SAFEPAY_WEBHOOK_SECRET= # optional; enables strict webhook verification
-```
-
-> Atlas: add your IP (or `0.0.0.0/0` for dev) under **Network Access** or the API
-> can't connect.
-
-## Deploy to Vercel (one app)
-
-Import the repo; `vercel.json` builds `Frontend/` as static and `Backend/api/index.js`
-as a serverless function, routing `/api/*` to it. Set the Backend env vars (plus
-`CLIENT_ORIGIN`/`PUBLIC_BASE_URL` = your Vercel URL) in Project Settings. The
-production Safepay webhook is `https://j-template.vercel.app/api/payments/safepay/webhook`.
 
 ## Use Case
 Ideal for startups, freelancers, or small businesses looking for a **ready-to-use
